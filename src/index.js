@@ -34,6 +34,7 @@ bot.on('message', (msg) => {
 	const chatId = msg.chat.id;
 	console.log(msg);
 	if(text === "/start"){ 
+        bot.sendMessage(chatId, `Bot started`);
         let flag1 = true;
         let flag2 = true;
         const start = async () => {
