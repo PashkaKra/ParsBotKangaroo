@@ -5,6 +5,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const TOKEN = process.env.TOKEN;
+const CHAT_ID = process.env.CHAT_ID;
 const URL1 = process.env.URL1;
 const URL2 = process.env.URL2;
 const IDENT = process.env.IDENT;
@@ -35,26 +36,31 @@ bot.on('message', (msg) => {
 	console.log(msg);
 	if(text === "/start"){ 
         bot.sendMessage(chatId, `Bot started`);
+        bot.sendMessage(CHAT_ID, `Bot started`);
         let flag1 = true;
         let flag2 = true;
         const start = async () => {
             const dataPars1 = await parsfunc(URL1);
             if(dataPars1 && flag1){
                 bot.sendMessage(chatId, `Запись по ссылке ${URL1} открылась`);
+                bot.sendMessage(CHAT_ID, `Запись по ссылке ${URL1} открылась`);
                 flag1 = false;
             }
             if(!dataPars1 && !flag1){
                 bot.sendMessage(chatId, `Запись по ссылке ${URL1} закрылась`);
+                bot.sendMessage(CHAT_ID, `Запись по ссылке ${URL1} закрылась`);
                 flag1 = true;
             }
 
             const dataPars2 = await parsfunc(URL2);
             if(dataPars2 && flag2){
                 bot.sendMessage(chatId, `Запись по ссылке ${URL2} открылась`);
+                bot.sendMessage(CHAT_ID, `Запись по ссылке ${URL2} открылась`);
                 flag2 = false;
             }
             if(!dataPars2 && !flag2){
                 bot.sendMessage(chatId, `Запись по ссылке ${URL2} закрылась`);
+                bot.sendMessage(CHAT_ID, `Запись по ссылке ${URL2} закрылась`);
                 flag2 = true;
             }
         }
