@@ -14,7 +14,13 @@ const TEXT = process.env.TEXT;
 const bot = new TelegramApi(TOKEN, {polling: true});
 
 const parsfunc = async (url) => {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({
+                executablePath: '/usr/bin/chromium-browser',
+                ignoreDefaultArgs: ['--disable-extensions']
+        });//{
+        //headless: true,
+        //args: ["--no-sandbox", "--disable-setuid-sandbox"]    
+    //});
     const page = await browser.newPage();
     await page.goto(url);
     await page.waitForSelector('iframe');
@@ -23,49 +29,55 @@ const parsfunc = async (url) => {
     const pars = await frame.waitForSelector(IDENT);
     const dataT = await pars.evaluate(el => el.innerText);
     await browser.close();
-    if(dataT === TEXT){
-        return false;
+    if(dataT !== TEXT){
+        return true;
     }
-    else return true;
+    else return false;
 
 }
 
-bot.on('message', (msg) => {
-	const text = msg.text;
-	const chatId = msg.chat.id;
-	console.log(msg);
-	if(text === "/start"){ 
-        bot.sendMessage(chatId, `Bot started`);
-        bot.sendMessage(CHAT_ID, `Bot started`);
+const start = () => {
+    const MIN_TIME = 30;
+    const MAX_TIME = 60;
+    bot.on('message', async (msg) => {
+        const text = msg.text;
+        const chatId = msg.chat.id;
+        console.log(msg);
         let flag1 = true;
         let flag2 = true;
-        const start = async () => {
-            const dataPars1 = await parsfunc(URL1);
-            if(dataPars1 && flag1){
-                bot.sendMessage(chatId, `Запись по ссылке ${URL1} открылась`);
-                bot.sendMessage(CHAT_ID, `Запись по ссылке ${URL1} открылась`);
-                flag1 = false;
-            }
-            if(!dataPars1 && !flag1){
-                bot.sendMessage(chatId, `Запись по ссылке ${URL1} закрылась`);
-                bot.sendMessage(CHAT_ID, `Запись по ссылке ${URL1} закрылась`);
-                flag1 = true;
-            }
+        if(text === "/start"){
+            await bot.sendMessage(CHAT_ID, `Bot started`);
+            const check_change = async () => {
+                let rand = Math.floor(Math.random() * (MAX_TIME - MIN_TIME + 1) + MIN_TIME);
+                //await bot.sendMessage(chatId, `Timeoute = ${rand}s`);
+                const dataPars1 = await parsfunc(URL1);
+                if(dataPars1 && flag1){
+                    await bot.sendMessage(chatId, `Запись по ссылке ${URL1} открылась`);
+                    await bot.sendMessage(CHAT_ID, `Запись по ссылке ${URL1} открылась`);
+                    return flag1 = false;
+                }
+                if(!dataPars1 && !flag1){
+                    await bot.sendMessage(chatId, `Запись по ссылке ${URL1} закрылась`);
+                    await bot.sendMessage(CHAT_ID, `Запись по ссылке ${URL1} закрылась`);
+                    return flag1 = true;
+                }
 
-            const dataPars2 = await parsfunc(URL2);
-            if(dataPars2 && flag2){
-                bot.sendMessage(chatId, `Запись по ссылке ${URL2} открылась`);
-                bot.sendMessage(CHAT_ID, `Запись по ссылке ${URL2} открылась`);
-                flag2 = false;
+                const dataPars2 = await parsfunc(URL2);
+                if(dataPars2 && flag2){
+                    await bot.sendMessage(chatId, `Запись по ссылке ${URL2} открылась`);
+                    await bot.sendMessage(CHAT_ID, `Запись по ссылке ${URL2} открылась`);
+                    return flag2 = false;
+                }
+                if(!dataPars2 && !flag2){
+                    await bot.sendMessage(chatId, `Запись по ссылке ${URL2} закрылась`);
+                    await bot.sendMessage(CHAT_ID, `Запись по ссылке ${URL2} закрылась`);
+                    return flag2 = true;
+                }
+                setTimeout(check_change, rand * 1000);
             }
-            if(!dataPars2 && !flag2){
-                bot.sendMessage(chatId, `Запись по ссылке ${URL2} закрылась`);
-                bot.sendMessage(CHAT_ID, `Запись по ссылке ${URL2} закрылась`);
-                flag2 = true;
-            }
+            check_change();
         }
-        
-        start();
-        setInterval(start, 30000);
-    }
-});
+    });
+}
+start();
+
